@@ -17,9 +17,6 @@ on:
       region:
         required: true
         type: string
-      cdk_stack:
-        required: false
-        type: string
 
 jobs:
  deploy:
@@ -44,7 +41,6 @@ jobs:
       uses: youyo/aws-cdk-github-actions@v2
       with:
         cdk_subcommand: deploy
-        cdk_stack: ${{ inputs.cdk_stack }}
         cdk_args: '--require-approval never'
         actions_comment: false
       env:
