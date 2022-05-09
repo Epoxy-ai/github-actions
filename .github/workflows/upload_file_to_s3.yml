@@ -1,0 +1,50 @@
+name: Upload a file to an S3 bucket
+
+on:
+  workflow_call:
+    secrets:
+      gh_token:
+        required: true
+      aws_access_key_id:
+        required: true
+      aws_secret_access_key:
+        required: true
+      s3_bucket:
+        required: true
+    inputs:
+      region:
+        required: true
+        type: string
+      source_file:
+        required: true
+        type: string
+      destination_file:
+        required: false
+        type: string
+
+jobs:
+  upload_schema:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v2
+      - name: Install AWS CLI
+        uses: unfor19/install-aws-cli-action@v1.0.3
+        with:
+          version: 2
+      - name: Install configure-aws-credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.aws_access_key_id }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
+          aws-region: ${{ inputs.region }}
+      - name: Upload API spec file to s3
+        run: |
+          if [ -z "${{ inputs.destination_file }}" ] # length of destination_file is zero
+          then
+            # do this is destination_file is not provided
+            basefilename=$(basename -- ${{ inputs.source_file }})
+            aws s3 cp ${{ inputs.source_file }} s3://${{ secrets.s3_bucket }}/$basefilename
+          else
+            aws s3 cp ${{ inputs.source_file }} s3://${{ secrets.s3_bucket }}/${{ inputs.destination_file }}
+          fi
