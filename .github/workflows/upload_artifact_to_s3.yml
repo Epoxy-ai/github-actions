@@ -28,7 +28,7 @@ jobs:
       - name: Download the artifact
         uses: actions/download-artifact@v3
         with:
-          name: inputs.artifact_name
+          name: ${{ inputs.artifact_name }}
       - name: Install AWS CLI
         uses: unfor19/install-aws-cli-action@v1.0.3
         with:
@@ -40,4 +40,4 @@ jobs:
           aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
           aws-region: ${{ inputs.region }}
       - name: Upload API spec file to s3
-        run: aws s3 cp ${{ inputs.source_artifact }} s3://${{ secrets.s3_bucket }}/${{ inputs.source_artifact }}
+        run: aws s3 cp ${{ inputs.artifact_name }} s3://${{ secrets.s3_bucket }}/${{ inputs.artifact_name }}
