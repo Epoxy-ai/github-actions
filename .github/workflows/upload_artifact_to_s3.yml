@@ -1,0 +1,43 @@
+name: Upload an artifact to an S3 bucket
+
+on:
+  workflow_call:
+    secrets:
+      gh_token:
+        required: true
+      aws_access_key_id:
+        required: true
+      aws_secret_access_key:
+        required: true
+      s3_bucket:
+        required: true
+    inputs:
+      region:
+        required: true
+        type: string
+      artifact_name:
+        required: true
+        type: string
+
+jobs:
+  upload_schema:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v2
+      - name: Download the artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: inputs.artifact_name
+      - name: Install AWS CLI
+        uses: unfor19/install-aws-cli-action@v1.0.3
+        with:
+          version: 2
+      - name: Install configure-aws-credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.aws_access_key_id }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
+          aws-region: ${{ inputs.region }}
+      - name: Upload API spec file to s3
+        run: aws s3 cp ${{ inputs.source_artifact }} s3://${{ secrets.s3_bucket }}/${{ inputs.source_artifact }}
