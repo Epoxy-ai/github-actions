@@ -1,0 +1,27 @@
+name: Create .env file from cdk.json
+
+on:
+  workflow_call:
+
+jobs:
+  create_env_file_from_cdk_json:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Convert cdk.json to .env file
+        run: |
+          set -eo pipefail
+
+          # Get the current branch either from CI environment or from locally checked out branch
+          CURRENT_GIT_BRANCH="${GITHUB_HEAD_REF:-$(git symbolic-ref --short HEAD)}"
+
+          # Build a .env using the current git branch, include `stackId`
+          jq -r --arg CURRENT_GIT_BRANCH "$CURRENT_GIT_BRANCH" '.context.globals + (.context.environments[] | select(.branchName | contains($CURRENT_GIT_BRANCH))) | . + { stackId: "\(.appName)\(.environment | (.[:1] | ascii_upcase) + (.[1:]))" } | to_entries | .[] | "\(.key)=\(.value)"' cdk.json > .env
+
+          # Check that env file has data in it, if empty this script should die
+          if [ -s .env ]; then
+            echo "### :white_check_mark: Created .env file for branch: $(echo $CURRENT_GIT_BRANCH)" >> $GITHUB_STEP_SUMMARY
+            cat .env >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### :red_circle: Error creating .env file for branch: $(echo $CURRENT_GIT_BRANCH)" >> $GITHUB_STEP_SUMMARY
+            exit 126
+          fi
