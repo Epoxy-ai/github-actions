@@ -30,4 +30,4 @@ jobs:
         run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.private_gh_packages_token }}" >> .npmrc
 
       - run: npm ci
-      - run: npm test-cdk
+      - run: npm run test-cdk
