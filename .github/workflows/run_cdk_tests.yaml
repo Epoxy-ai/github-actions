@@ -1,0 +1,33 @@
+# Runs node tests
+name: node test runner workflow
+
+on:
+  # Runs workflow when called from another workflow (referred to as a "called" workflow)
+  workflow_call:
+    secrets:
+      gh_token:
+        required: true
+      private_gh_packages_token:
+        required: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v3
+
+      - name: Install nodejs
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          registry-url: https://npm.pkg.github.com
+          scope: "@epoxy-ai"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.gh_token }}
+
+      - name: Update .npmrc
+        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.private_gh_packages_token }}" >> .npmrc
+
+      - run: npm ci
+      - run: npm test-cdk
