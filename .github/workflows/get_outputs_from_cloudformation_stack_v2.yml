@@ -1,0 +1,68 @@
+# Use this version if your project has updated to use the `service` field instead of `appName`
+name: Get outputs from a cloudformation stack by 'service' field and create a .stack_outputs artifact
+
+on:
+  workflow_call:
+    secrets:
+      aws_secret_access_key:
+        required: true
+      aws_access_key_id:
+        required: true
+      aws_region:
+        required: true
+    inputs:
+      outputs:
+        description: A comma-delimited string of stack Output names to be fetched
+        required: true
+        type: string
+
+jobs:
+  create_stack_outputs_artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v3
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-access-key-id: ${{ secrets.aws_access_key_id }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
+          aws-region: ${{ secrets.aws_region }}
+      - name: Get and export the Cloudformation stack outputs
+        env:
+          OUTPUTS_TO_FETCH: ${{ inputs.outputs }}
+        run: |
+          set -eo pipefail
+
+          # Get the current branch either from CI environment or from locally checked out branch
+          CURRENT_GIT_BRANCH="${GITHUB_HEAD_REF:-$(git symbolic-ref --short HEAD)}"
+
+          # Build stackId from cdk.json
+          STACK_ID=$(jq -r --arg CURRENT_GIT_BRANCH "$CURRENT_GIT_BRANCH" '.context.globals + (.context.environments[] | select(.branchName | contains($CURRENT_GIT_BRANCH))) | "\(.service)\(.environment | (.[:1] | ascii_upcase) + (.[1:]))"' cdk.json)
+
+          # Check that stackId is available and explicitly set it to a new variable
+          if [[ -z "${STACK_ID}" ]]; then
+            echo "### :red_circle: No stackId value found, goodbye." >> $GITHUB_STEP_SUMMARY
+            exit 126
+          else
+            : # noop
+          fi
+
+          # Get the data from AWS Cloudformation
+          GREP_INPUTS=$(echo ${OUTPUTS_TO_FETCH} | sed "s/,/\\\|/g")
+          aws cloudformation describe-stacks --stack-name ${STACK_ID} --query "Stacks[0].Outputs[]" | jq -r '.[] | "\(.OutputKey)=\(.OutputValue)"' | grep ${GREP_INPUTS} > .stack_outputs
+
+          # Check that output values were found and set on GITHUB_ENV
+          if [ -s .stack_outputs ]; then
+            echo "### :white_check_mark: .stack_outputs file created:" >> $GITHUB_STEP_SUMMARY
+            cat .stack_outputs >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### :red_circle: No output values from in stack, goodbye." >> $GITHUB_STEP_SUMMARY
+            exit 126
+          fi
+      - name: Upload .stack_outputs artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: stack_outputs
+          path: ${{ github.workspace }}/.stack_outputs
+          retention-days: 5
