@@ -9,14 +9,17 @@ on:
         required: true
       private_gh_packages_token:
         required: true
-      aws_access_key_id:
-        required: true
-      aws_secret_access_key:
-        required: true
     inputs:
       region:
         required: true
         type: string
+      aws_role_to_assume:
+        required: true
+        type: string
+      aws_role_duration_seconds:
+        required: false
+        type: number
+        default: 1200
 
 jobs:
  deploy:
@@ -39,10 +42,13 @@ jobs:
 
     - name: Install npm dependencies
       run: npm ci
+    
+    - name: Configure AWS Creds
+      uses: aws-actions/configure-aws-credentials@v1-node16
+      with:
+        role-to-assume: ${{ inputs.aws_role_to_assume }}
+        role-duration-seconds: ${{ inputs.aws_role_duration_seconds }} 
+        aws-region: ${{ inputs.region }}
 
     - name: CDK Deploy
       run: npx cdk deploy --require-approval never "*"
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.aws_access_key_id }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_access_key }}
-        AWS_DEFAULT_REGION: ${{ inputs.region }}
