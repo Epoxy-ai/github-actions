@@ -1,5 +1,8 @@
 name: Get outputs from a cloudformation stack and create a .stack_outputs artifact
 
+permissions:
+  id-token: write
+
 on:
   workflow_call:
     inputs:

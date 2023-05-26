@@ -1,6 +1,9 @@
 # Deploys using CDK
 name: Deploy with CDK
 
+permissions:
+  id-token: write
+
 on:
   # Runs workflow when called from another workflow (referred to as a "called" workflow)
   workflow_call:
