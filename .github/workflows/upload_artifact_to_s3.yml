@@ -5,16 +5,19 @@ on:
     secrets:
       gh_token:
         required: true
-      aws_access_key_id:
-        required: true
-      aws_secret_access_key:
-        required: true
       s3_bucket:
         required: true
     inputs:
-      region:
+      aws_region:
         required: true
         type: string
+      aws_role_to_assume:
+        required: true
+        type: string
+      aws_role_duration_seconds:
+        required: false
+        type: number
+        default: 1200
       artifact_name:
         required: true
         type: string
@@ -36,8 +39,8 @@ jobs:
       - name: Install configure-aws-credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
         with:
-          aws-access-key-id: ${{ secrets.aws_access_key_id }}
-          aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
-          aws-region: ${{ inputs.region }}
+          role-to-assume: ${{ inputs.aws_role_to_assume }}
+          role-duration-seconds: ${{ inputs.aws_role_duration_seconds }} 
+          aws-region: ${{ inputs.aws_region }}
       - name: Upload API spec file to s3
         run: aws s3 cp ${{ inputs.artifact_name }} s3://${{ secrets.s3_bucket }}/${{ inputs.artifact_name }}
