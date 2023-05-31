@@ -13,7 +13,7 @@ on:
       private_gh_packages_token:
         required: true
     inputs:
-      region:
+      aws_region:
         required: true
         type: string
       aws_role_to_assume:
@@ -51,7 +51,7 @@ jobs:
       with:
         role-to-assume: ${{ inputs.aws_role_to_assume }}
         role-duration-seconds: ${{ inputs.aws_role_duration_seconds }} 
-        aws-region: ${{ inputs.region }}
+        aws-region: ${{ inputs.aws_region }}
 
     - name: CDK Deploy
       run: npx cdk deploy --require-approval never "*"

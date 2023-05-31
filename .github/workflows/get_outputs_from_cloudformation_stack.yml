@@ -10,7 +10,7 @@ on:
         description: A comma-delimited string of stack Output names to be fetched
         required: true
         type: string
-      region:
+      aws_region:
         required: true
         type: string
       aws_role_to_assume:
@@ -33,7 +33,7 @@ jobs:
         with:
           role-to-assume: ${{ inputs.aws_role_to_assume }}
           role-duration-seconds: ${{ inputs.aws_role_duration_seconds }} 
-          aws-region: ${{ inputs.region }}
+          aws-region: ${{ inputs.aws_region }}
 
       - name: Get and export the Cloudformation stack outputs
         env:
