@@ -30,7 +30,7 @@ jobs:
         with:
           role-to-assume: ${{ inputs.aws_role_to_assume }}
           role-duration-seconds: ${{ inputs.aws_role_duration_seconds }}
-          aws-region: ${{ secrets.aws_region }}
+          aws-region: ${{ inputs.aws_region }}
       - name: Get and export the Cloudformation stack outputs
         env:
           OUTPUTS_TO_FETCH: ${{ inputs.outputs }}
