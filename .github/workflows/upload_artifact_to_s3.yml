@@ -1,5 +1,9 @@
 name: Upload an artifact to an S3 bucket
 
+permissions:
+  id-token: write
+  contents: read
+
 on:
   workflow_call:
     secrets:
