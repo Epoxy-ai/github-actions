@@ -1,32 +1,40 @@
 name: Get outputs from a cloudformation stack and create a .stack_outputs artifact
 
+permissions:
+  id-token: write
+
 on:
   workflow_call:
-    secrets:
-      aws_secret_access_key:
-        required: true
-      aws_access_key_id:
-        required: true
-      aws_region:
-        required: true
     inputs:
       outputs:
         description: A comma-delimited string of stack Output names to be fetched
         required: true
         type: string
+      aws_region:
+        required: true
+        type: string
+      aws_role_to_assume:
+        required: true
+        type: string
+      aws_role_duration_seconds:
+        required: false
+        type: number
+        default: 1200
 
 jobs:
   create_stack_outputs_artifact:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout codebase
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1-node16
         with:
-          aws-access-key-id: ${{ secrets.aws_access_key_id }}
-          aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
-          aws-region: ${{ secrets.aws_region }}
+          role-to-assume: ${{ inputs.aws_role_to_assume }}
+          role-duration-seconds: ${{ inputs.aws_role_duration_seconds }} 
+          aws-region: ${{ inputs.aws_region }}
+
       - name: Get and export the Cloudformation stack outputs
         env:
           OUTPUTS_TO_FETCH: ${{ inputs.outputs }}
@@ -59,6 +67,7 @@ jobs:
             echo "### :red_circle: No output values from in stack, goodbye." >> $GITHUB_STEP_SUMMARY
             exit 126
           fi
+
       - name: Upload .stack_outputs artifact
         uses: actions/upload-artifact@v3
         with:
