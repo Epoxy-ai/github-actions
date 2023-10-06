@@ -1,6 +1,10 @@
 # Deploys using CDK
 name: Deploy with CDK
 
+permissions:
+  id-token: write
+  contents: read
+
 on:
   # Runs workflow when called from another workflow (referred to as a "called" workflow)
   workflow_call:
@@ -9,14 +13,17 @@ on:
         required: true
       private_gh_packages_token:
         required: true
-      aws_access_key_id:
-        required: true
-      aws_secret_access_key:
-        required: true
     inputs:
-      region:
+      aws_region:
         required: true
         type: string
+      aws_role_to_assume:
+        required: true
+        type: string
+      aws_role_duration_seconds:
+        required: false
+        type: number
+        default: 1200
 
 jobs:
  deploy:
@@ -28,7 +35,7 @@ jobs:
     - name: Install nodejs
       uses: actions/setup-node@v3
       with:
-        node-version: '16'
+        node-version: '18'
         registry-url: https://npm.pkg.github.com
         scope: "@epoxy-ai"
       env:
@@ -39,10 +46,13 @@ jobs:
 
     - name: Install npm dependencies
       run: npm ci
+    
+    - name: Configure AWS Creds
+      uses: aws-actions/configure-aws-credentials@v1-node16
+      with:
+        role-to-assume: ${{ inputs.aws_role_to_assume }}
+        role-duration-seconds: ${{ inputs.aws_role_duration_seconds }} 
+        aws-region: ${{ inputs.aws_region }}
 
     - name: CDK Deploy
       run: npx cdk deploy --require-approval never "*"
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.aws_access_key_id }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_access_key }}
-        AWS_DEFAULT_REGION: ${{ inputs.region }}

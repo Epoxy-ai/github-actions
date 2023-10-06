@@ -1,5 +1,5 @@
-# Use this version if your project has updated to use the `service` field instead of `appName`
-name: Get outputs from a cloudformation stack by 'service' field and create a .stack_outputs artifact
+# Use this version if your project uses a stack name in the format `${service}${environment}${operator}`
+name: Get outputs from a cloudformation stack by 'service', 'environment', and 'operator' field and create a .stack_outputs artifact
 
 on:
   workflow_call:
@@ -41,7 +41,7 @@ jobs:
           CURRENT_GIT_BRANCH="${GITHUB_HEAD_REF:-$(git symbolic-ref --short HEAD)}"
 
           # Build stackId from cdk.json
-          STACK_ID=$(jq -r --arg CURRENT_GIT_BRANCH "$CURRENT_GIT_BRANCH" '.context.globals + (.context.environments[] | select(.branchName | contains($CURRENT_GIT_BRANCH))) | "\(.service)\(.environment | (.[:1] | ascii_upcase) + (.[1:]))"' cdk.json)
+          STACK_ID=$(jq -r --arg CURRENT_GIT_BRANCH "$CURRENT_GIT_BRANCH" '.context.globals + (.context.environments[] | select(.branchName | contains($CURRENT_GIT_BRANCH))) | "\(.service)\(.environment | (.[:1] | ascii_upcase) + (.[1:]))\(.operator | (.[:1] | ascii_upcase) + (.[1:]))"' cdk.json)
 
           # Check that stackId is available and explicitly set it to a new variable
           if [[ -z "${STACK_ID}" ]]; then
