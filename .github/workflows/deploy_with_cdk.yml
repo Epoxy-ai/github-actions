@@ -30,10 +30,10 @@ jobs:
   runs-on: ubuntu-latest
   steps:
     - name: Checkout codebase
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Install nodejs
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '18'
         registry-url: https://npm.pkg.github.com
@@ -48,7 +48,7 @@ jobs:
       run: npm ci
     
     - name: Configure AWS Creds
-      uses: aws-actions/configure-aws-credentials@v1-node16
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         role-to-assume: ${{ inputs.aws_role_to_assume }}
         role-duration-seconds: ${{ inputs.aws_role_duration_seconds }} 
