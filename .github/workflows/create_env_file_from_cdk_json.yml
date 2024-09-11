@@ -33,4 +33,4 @@ jobs:
           name: env_file
           path: ${{ github.workspace }}/.env
           retention-days: 5
-          ignore-hidden-files: false
+          include-hidden-files: true
