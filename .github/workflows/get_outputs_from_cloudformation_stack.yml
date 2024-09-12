@@ -74,3 +74,4 @@ jobs:
           name: stack_outputs
           path: ${{ github.workspace }}/.stack_outputs
           retention-days: 5
+          include-hidden-files: true
